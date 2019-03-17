@@ -1,0 +1,27 @@
+@startuml delivery pipeline initial
+
+actor "Developer" as developer #brown
+entity "Build Job (Jenkins)" as buildJob
+entity "Integration (K8s)" as int
+entity "Registry (Nexus)" as nexus
+entity "Review (K8s)" as review
+
+== Manual part, executed when the feature is finished ==
+developer -> int: get current resources from integration
+developer -> review: apply same resources to review
+developer -> review: do some exploratory testing
+developer -> nexus: tag the current specs repo as "latest_on_review"
+...few minutes later...
+buildJob -> review: execute specs
+note left
+    specs tagged "latest_on_review"
+    runs every x minutes
+end note
+buildJob -> developer: feedback about the specs
+...<color:coral><size:14>**//all devs stare at the screen//**</size></color>...
+alt specs successful
+    developer -> developer: feature flagged as Ready for Acceptance
+else specs failed
+    developer -> nexus: rollback the tags to the last version **manually**
+end
+@enduml

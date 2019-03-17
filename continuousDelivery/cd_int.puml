@@ -1,0 +1,18 @@
+@startuml delivery pipeline initial
+
+actor "Developer" as developer #brown
+entity "Build Job (Jenkins)" as buildJob
+entity "Registry (Nexus)" as nexus
+entity "Integration (K8s)" as int
+
+buildJob -> nexus: pull latest version of the referenced service/pkg..
+buildJob -> int: create and apply deployment file w. the new version
+int -> int: roll out the new instance(s)
+alt Build job successful
+    buildJob -> int: execute specs latest version
+else Build job failed
+    buildJob -> int: k8s rollback to the last deployment file
+    int -> int: roll out the last instance(s)
+    buildJob -> developer: Feedback about success or failure
+end
+@enduml

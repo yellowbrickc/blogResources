@@ -1,0 +1,38 @@
+@startuml CD distilled
+:pipeline <b>deploy to review</b> is triggered;
+partition "Prepare environment (i.e. review)" {
+    :git fetch origin tag <b>ready_for_review</b>
+    git checkout <b>ready_for_review</b>;
+    : ks apply review --context review
+    <i>roll out the resources to the env review</i>;
+}
+partition "Execute quality gate" {
+    :execute the acceptance tests for <b>review</b>|
+    if(Specs fail) then
+        :return to the version <b>latest_review</b>;
+        :feedback with report;
+        detach
+    endif
+    fork
+        :quality gate
+        i.e. security tests|
+        :feedback with report;
+    fork again
+        :quality gate
+        i.e. performance tests|
+        :feedback with reports;
+    end fork
+    if(quality gate fails) then
+        :return to the version <b>latest_review</b>;
+        detach
+    endif
+}
+partition "Promote the current version" {
+    :set the git tag <b>"latest_review"</b> and
+    set the git tag <b>"ready_for_production"</b>
+    of the deployment repo to the current version;
+    :push the current version of
+    the deployment repo and all tags to master;
+}
+:trigger the pipeline <b>deploy to production</b>;
+@enduml

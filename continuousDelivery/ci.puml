@@ -1,0 +1,11 @@
+@startuml continuous integration
+
+actor "Developer" as developer #brown
+entity "Build Job (Jenkins)" as buildJob
+entity "Registry (Nexus)" as nexus
+
+developer -> buildJob: git push
+buildJob -> buildJob: create artifact (Docker img, npm pkg,..)
+buildJob -> buildJob: build, licence validation, unit tests
+buildJob -> nexus: push artifact
+@enduml
